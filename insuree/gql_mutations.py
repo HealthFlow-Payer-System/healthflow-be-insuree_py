@@ -57,7 +57,6 @@ class InsureeBase:
     status = graphene.String(required=False)
     status_reason = graphene.String(required=False)
     status_date = graphene.Date(required=False)
-    add_on_existing_policy = graphene.Boolean(required=False)
 
 
 class CreateInsureeInputType(InsureeBase, OpenIMISMutation.Input):
