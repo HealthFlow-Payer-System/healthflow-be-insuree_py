@@ -5,6 +5,8 @@ import shutil
 import uuid
 from importlib import import_module
 from os import path
+from io import BytesIO
+from PIL import Image
 
 from core.apps import CoreConfig
 from django.db.models import Q
@@ -16,6 +18,7 @@ from insuree.models import (InsureePhoto, PolicyRenewalDetail, Insuree, Family, 
                             InsureeStatusReason)
 from django.core.exceptions import ValidationError
 from core.models import filter_validity, resolved_id_reference
+
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +185,22 @@ def reset_family_before_update(family):
     family.json_ext = None
 
 
+
+def _resize_image(base64_str, max_size=(1024, 1024)):
+    image_data = base64.b64decode(base64_str)
+    
+    image = Image.open(BytesIO(image_data))
+    
+    if image.size[0] > max_size[0] or image.size[1] > max_size[1]:
+        image.thumbnail(max_size)  # Maintain aspect ratio
+    
+    buffer = BytesIO()
+    image.save(buffer, format=image.format)
+    
+    resized_base64_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    
+    return resized_base64_str
+    
 def handle_insuree_photo(user, now, insuree, data):
     existing_insuree_photo = insuree.photo
     insuree_photo = None
@@ -191,6 +210,7 @@ def handle_insuree_photo(user, now, insuree, data):
     data['validity_from'] = now
     data['insuree_id'] = insuree.id
     photo_bin = data.get('photo', None)
+    photo_bin = _resize_image(photo_bin) if photo_bin else None 
     # no photo changes
     if (
         'uuid' in data and existing_insuree_photo and
@@ -329,7 +349,8 @@ class InsureeService:
         status = data.get('status', InsureeStatus.ACTIVE)
         if status not in [choice[0] for choice in InsureeStatus.choices]:
             raise ValidationError(_("mutation.insuree.wrong_status"))
-        if InsureeConfig.is_insuree_photo_required and photo_data is None:
+        # If photo is set it cannot be deleted 
+        if InsureeConfig.is_insuree_photo_required and photo_data is None and 'uuid' not in data:
             raise ValidationError(_("mutation.insuree.no_required_photo"))
         insuree = None
         if "uuid" in data:
