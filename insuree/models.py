@@ -10,7 +10,7 @@ from graphql import ResolveInfo
 from insuree.apps import InsureeConfig
 from location import models as location_models
 from location.models import LocationManager
-from location.models import LocationConfig
+from location.apps import LocationConfig
 
 
 class Gender(models.Model):
