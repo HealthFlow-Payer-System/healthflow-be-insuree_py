@@ -80,6 +80,9 @@ Rights required:
 * renewal_photo_age_child": age (in months) of a picture due for renewal
   for children (default: `12`)
 * no_location_check : if implementation is at a national scale without any Location check for all Users (default: False)
+* use_contextual_enrolment_officer_selection": Enables automatic assignment of 
+  the current user as the enrolment officer when uploading an insuree photo. If 'True', 
+  the officer is inferred from session; if 'False', manual selection remains available. (default: 'False)
 
 ## openIMIS Modules Dependencies
 * location.models.HealthFacility
