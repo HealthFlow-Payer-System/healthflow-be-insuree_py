@@ -481,8 +481,8 @@ def _get_contextual_insuree_officers(info, **kwargs):
             # Non-EO user
             user_districts = UserDistrict.get_user_districts(i_user)
             if user_districts:
-                location_uuids = [d.location.uuid for d in user_districts if d.location]
-                officers = Officer.objects.filter(location__uuid__in=location_uuids, validity_to__isnull=True).distinct()
+                location_ids = [d.location_id for d in user_districts if d.location]
+                officers = Officer.objects.filter(location__id__in=location_ids, validity_to__isnull=True).distinct()
                 if officers.exists():
                     return officers
 
