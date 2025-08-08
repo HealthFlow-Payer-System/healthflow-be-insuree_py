@@ -22,6 +22,8 @@ from location.apps import LocationConfig
 from core.schema import OrderedDjangoFilterConnectionField, OfficerGQLType
 from core.gql_queries import ValidationMessageGQLType
 from policy.models import Policy
+from core.models import Officer, Role, UserRole
+from location.models import UserDistrict
 
 # We do need all queries and mutations in the namespace here.
 from .gql_queries import *  # lgtm [py/polluting-import]
@@ -109,7 +111,10 @@ class Query(ExportableQueryMixin, graphene.ObjectType):
         family_uuid=graphene.String(required=True),
         orderBy=graphene.List(of_type=graphene.String),
     )
-    insuree_officers = DjangoFilterConnectionField(OfficerGQLType)
+    insuree_officers = DjangoFilterConnectionField(
+        OfficerGQLType,
+        location_id=graphene.String()
+    )
     insuree_policy = OrderedDjangoFilterConnectionField(
         InsureePolicyGQLType,
         parent_location=graphene.String(),
@@ -297,9 +302,12 @@ class Query(ExportableQueryMixin, graphene.ObjectType):
         dinstinct_queryset = Family.objects.filter(id__in=ids)
         return gql_optimizer.query(dinstinct_queryset.all(), info)
 
-    def resolve_insuree_officers(self, info, **kwargs):
+    def resolve_insuree_officers(self, info, location_id=None, **kwargs):
         if not info.context.user.has_perms(InsureeConfig.gql_query_insuree_officers_perms):
             raise PermissionDenied(_("unauthorized"))
+        
+        if InsureeConfig.use_contextual_enrolment_officer_selection:
+            return _get_contextual_insuree_officers(info, location_id=location_id, **kwargs)
 
     def resolve_insuree_policy(self, info, **kwargs):
         if not info.context.user.has_perms(InsureeConfig.gql_query_insuree_policy_perms):
@@ -453,3 +461,33 @@ def _get_additional_filter(sender, additional_filter, user, signal: Signal):
         )
         filters_from_signal = _read_signal_results(results_signal)
     return filters_from_signal
+
+def _get_contextual_insuree_officers(info, location_id=None, **kwargs):
+        if not info.context.user.has_perms(InsureeConfig.gql_query_insuree_officers_perms):
+            raise PermissionDenied(_("unauthorized"))
+
+        user = info.context.user
+        i_user = getattr(user, '_u', None)
+        
+        if i_user:
+            user_roles = UserRole.objects.filter(user_id=i_user.id, validity_to__isnull=True)
+            roles = list(
+                Role.objects.filter(
+                    id__in=user_roles.values_list("role_id", flat=True),
+                    validity_to__isnull=True
+                ).values_list("name", flat=True)
+            )
+            # If the user is an Enrolment Officer (EO)
+            if "Enrolment Officer" in roles:
+                return Officer.objects.filter(id=user.officer.id, validity_to__isnull=True)
+            
+            # Non-EO user
+            if location_id:
+                officers = Officer.objects.filter(officer_villages__location__id=location_id, validity_to__isnull=True)
+
+                if officers.exists():
+                    return officers
+
+        # No officers found → return all valid EOs
+        return Officer.objects.filter(validity_to__isnull=True)
+    
