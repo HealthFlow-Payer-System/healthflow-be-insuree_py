@@ -6,12 +6,21 @@ from dataclasses import dataclass
 from django.utils.translation import gettext as _
 from core.models import User, filter_validity
 from core.models.openimis_graphql_test_case import openIMISGraphQLTestCase, BaseTestContext
-from core.test_helpers import create_test_interactive_user
+from core.test_helpers import (
+    create_test_interactive_user,
+    create_claim_admin_role,
+    create_manager_role,
+    create_accountant_role,
+    create_clerk_role,
+    create_medical_officer_role,
+    create_scheme_admin_role,
+    create_receptionist_role,
+)
 from django.conf import settings
 from graphene_django.utils.testing import GraphQLTestCase
 from graphql_jwt.shortcuts import get_token
 from location.models import Location
-from location.test_helpers import create_test_location, assign_user_districts
+from location.test_helpers import create_test_location, assign_user_districts, create_basic_test_locations
 from rest_framework import status
 from insuree.test_helpers import create_test_insuree, generate_random_insuree_number
 from location.test_helpers import create_test_location, create_test_health_facility, create_test_village
@@ -45,16 +54,24 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
         cls.test_insuree = create_test_insuree(with_family=True, is_head=True, custom_props={'current_village':cls.test_village}, family_custom_props={'location':cls.test_village})
         cls.admin_user = create_test_interactive_user(username="testLocationAdmin")
         cls.admin_token = BaseTestContext(user=cls.admin_user).get_jwt()
-        cls.ca_user = create_test_interactive_user(username="testLocationNoRight", roles=[9])
+        cls.ca_user = create_test_interactive_user(username="testLocationNoRight", roles=[create_claim_admin_role().id])
         cls.ca_token = BaseTestContext(user=cls.ca_user).get_jwt()
         cls.admin_dist_user = create_test_interactive_user(username="testLocationDist")
+        create_basic_test_locations()
         assign_user_districts(cls.admin_dist_user, ["R1D1", "R2D1", "R2D2", "R2D1", cls.test_village.parent.parent.code])
         cls.admin_dist_token = BaseTestContext(user=cls.admin_dist_user).get_jwt()
         cls.photo_base64 = "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAAA1BMVEW10NBjBBbqAAAAH0lEQVRoge3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAvg0hAAABmmDh1QAAAABJRU5ErkJggg=="
 
         cls.photo_base64_2 = "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAAA1BMVEW10NBjBBbrAAAAH0lEQVRoge3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAvg0hAAABmmDh1QAAAABJRU5ErkJggg=="
         cls.eo_user = create_test_interactive_user(username="Positif")
-        cls.non_eo_user = create_test_interactive_user(username="NonEo", roles = [7, 2, 3, 4, 5, 6])
+        cls.non_eo_user = create_test_interactive_user(username="NonEo", roles=[
+            create_scheme_admin_role().id,
+            create_manager_role().id,
+            create_accountant_role().id,
+            create_clerk_role().id,
+            create_medical_officer_role().id,
+            create_receptionist_role().id,
+        ])
         cls.eo_token = get_token(cls.eo_user, DummyContext(user=cls.eo_user))
         cls.non_eo_token = get_token(cls.non_eo_user, DummyContext(user=cls.non_eo_user))
         cls.test_officer = create_test_officer(villages = [cls.test_village], custom_props={'code':"Positif",'last_name':"Positif",'other_names':"Le"})

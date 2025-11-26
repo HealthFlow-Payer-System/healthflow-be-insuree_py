@@ -1,5 +1,5 @@
 from insuree.apps import InsureeConfig
-from insuree.models import Insuree, Family, Gender, InsureePhoto
+from insuree.models import Insuree, Family, Gender, InsureePhoto, Profession, Education, Relation, ConfirmationType
 from insuree.services import validate_insuree_number
 from location.models import Location
 from location.test_helpers import create_test_village
@@ -15,6 +15,12 @@ def generate_random_insuree_number():
     return random.randrange(start_number, end_number)
     
 def create_test_insuree(with_family=True, is_head=False, custom_props=None, family_custom_props=None):
+    create_test_gender()
+    create_test_profession()
+    create_test_education()
+    create_test_relation()
+    create_test_confirmation_type()
+
     if custom_props is None:
         custom_props = {}
     else:
@@ -190,3 +196,64 @@ def create_test_photo(insuree_id, officer_id, custom_props=None):
     )
 
     return photo
+
+
+def create_test_gender():
+    if Gender.objects.exists():
+        return
+    Gender.objects.bulk_create([
+        Gender(code='F', gender='Female', alt_language=None, sort_order=2),
+        Gender(code='M', gender='Male', alt_language=None, sort_order=1),
+        Gender(code='O', gender='Other', alt_language=None, sort_order=3),
+    ])
+
+
+def create_test_profession():
+    if Profession.objects.exists():
+        return
+    Profession.objects.bulk_create([
+        Profession(id=1, profession='Housewife', sort_order=None, alt_language='Femme au foyer'),
+        Profession(id=2, profession='Employee', sort_order=None, alt_language='Employé'),
+        Profession(id=3, profession='Self Employee', sort_order=None, alt_language='Indépendant'),
+        Profession(id=4, profession='Others', sort_order=None, alt_language='Autres'),
+    ])
+
+
+def create_test_education():
+    if Education.objects.exists():
+        return
+    Education.objects.bulk_create([
+        Education(id=1, education='Nursery', sort_order=None, alt_language='Garderie'),
+        Education(id=2, education='Primary school', sort_order=None, alt_language='École primaire'),
+        Education(id=3, education='Secondary school', sort_order=None, alt_language='École secondaire'),
+        Education(id=4, education='University', sort_order=None, alt_language='Université'),
+        Education(id=5, education='Postgraduate studies', sort_order=None, alt_language='Études supérieures'),
+        Education(id=6, education='PHD', sort_order=None, alt_language='Doctorat'),
+        Education(id=7, education='Other', sort_order=None, alt_language='Autre'),
+    ])
+
+
+def create_test_relation():
+    if Relation.objects.exists():
+        return
+    Relation.objects.bulk_create([
+        Relation(id=1, relation='Brother/Sister', sort_order=None, alt_language='Frère/soeur'),
+        Relation(id=2, relation='Father/Mother', sort_order=None, alt_language='Père/Mère'),
+        Relation(id=3, relation='Uncle/Aunt', sort_order=None, alt_language='Oncle/tante'),
+        Relation(id=4, relation='Son/Daughter', sort_order=None, alt_language='Fils/fille'),
+        Relation(id=5, relation='Grand parents', sort_order=None, alt_language='Grands/parents'),
+        Relation(id=6, relation='Employee', sort_order=None, alt_language='Employé'),
+        Relation(id=7, relation='Others', sort_order=None, alt_language='Autres'),
+        Relation(id=8, relation='Spouse', sort_order=None, alt_language='Époux'),
+    ])
+
+
+def create_test_confirmation_type():
+    if ConfirmationType.objects.exists():
+        return
+    ConfirmationType.objects.bulk_create([
+        ConfirmationType(code='A', confirmationtype='Local council', sort_order=None, alt_language='Conseil local'),
+        ConfirmationType(code='B', confirmationtype='Municipality', sort_order=None, alt_language='Municipalité'),
+        ConfirmationType(code='C', confirmationtype='State', sort_order=None, alt_language='Etat'),
+        ConfirmationType(code='D', confirmationtype='Other', sort_order=None, alt_language='Autre'),
+    ])

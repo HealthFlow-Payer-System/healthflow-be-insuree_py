@@ -12,12 +12,13 @@ from insuree import schema as insuree_schema
 from insuree.models import Insuree
 from insuree.test_helpers import create_test_insuree
 from location.models import UserDistrict
-from core.services import create_or_update_interactive_user, create_or_update_core_user
+
 from core.models.openimis_graphql_test_case import openIMISGraphQLTestCase, BaseTestContext
 from insuree.services import validate_insuree_number
 from unittest.mock import ANY
 from django.conf import settings
 from graphql_jwt.shortcuts import get_token
+from core.test_helpers import create_accountant_role, create_test_interactive_user, create_enrolment_officer_role
 
 
 class InsureePhotoTest(openIMISGraphQLTestCase):
@@ -44,13 +45,17 @@ class InsureePhotoTest(openIMISGraphQLTestCase):
             "other_names": cls._TEST_USER_NAME,
             "user_types": "INTERACTIVE",
             "language": "en",
-            "roles": [4],
+            "roles": [create_accountant_role().id, create_enrolment_officer_role().id],
         }
         cls.test_photo_path = InsureeConfig.insuree_photos_root_path
         cls.test_photo_uuid = str(uuid.uuid4())
         cls.photo_base64 = "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAAA1BMVEW10NBjBBbqAAAAH0lEQVRoge3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAvg0hAAABmmDh1QAAAABJRU5ErkJggg=="
         cls.photo_base64_2 = "iVBORw03GgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAAA1BMVEW10NBjBBbqAAAAH0lEQVRoge3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAvg0hAAABmmDh1QAAAABJRU5ErkJggg=="
-        cls.test_user = cls.__create_user_interactive_core()
+        cls.test_user = create_test_interactive_user(
+            username=cls._TEST_USER_NAME,
+            password=cls.test_user_PASSWORD,
+            roles=cls._TEST_DATA_USER["roles"]
+        )
         cls.insuree = create_test_insuree()
         cls.test_user_token = BaseTestContext(user=cls.test_user).get_jwt()
 
@@ -159,23 +164,7 @@ class InsureePhotoTest(openIMISGraphQLTestCase):
                 }}
             }}
         '''
-    @classmethod
-    def _get_or_create_user_api(cls):
-        try:
-            return User.objects.filter(username=cls._TEST_USER_NAME).get()
-        except User.DoesNotExist:
-            return cls.__create_user_interactive_core()
-    @classmethod
-    def __create_user_interactive_core(cls):
-        data = cls._TEST_DATA_USER
 
-        i_user, i_user_created = create_or_update_interactive_user(
-            user_id=None, data=data, audit_user_id=999, connected=False
-        )
-        create_or_update_core_user(
-            user_uuid=None, username=cls._TEST_USER_NAME, i_user=i_user)
-        
-        return User.objects.filter(username=cls._TEST_USER_NAME).get()
 
     def __get_insuree_query(self):
         return f'''
