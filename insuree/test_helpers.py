@@ -1,5 +1,5 @@
 from insuree.apps import InsureeConfig
-from insuree.models import Insuree, Family, Gender, InsureePhoto, Profession, Education, Relation, ConfirmationType
+from insuree.models import Insuree, Family, Gender, InsureePhoto, Profession, Education, Relation, ConfirmationType, FamilyType, IdentificationType
 from insuree.services import validate_insuree_number
 from location.models import Location
 from location.test_helpers import create_test_village
@@ -20,6 +20,7 @@ def create_test_insuree(with_family=True, is_head=False, custom_props=None, fami
     create_test_education()
     create_test_relation()
     create_test_confirmation_type()
+    create_test_family_type()
 
     if custom_props is None:
         custom_props = {}
@@ -256,4 +257,26 @@ def create_test_confirmation_type():
         ConfirmationType(code='B', confirmationtype='Municipality', sort_order=None, alt_language='Municipalité'),
         ConfirmationType(code='C', confirmationtype='State', sort_order=None, alt_language='Etat'),
         ConfirmationType(code='D', confirmationtype='Other', sort_order=None, alt_language='Autre'),
+    ])
+
+
+def create_test_family_type():
+    if FamilyType.objects.exists():
+        return
+    FamilyType.objects.bulk_create([
+        FamilyType(code='N', type='Nuclear Family', sort_order=1, alt_language='Famille nucléaire'),
+        FamilyType(code='E', type='Extended Family', sort_order=2, alt_language='Famille étendue'),
+        FamilyType(code='S', type='Single Parent', sort_order=3, alt_language='Parent seul'),
+        FamilyType(code='O', type='Other', sort_order=4, alt_language='Autre'),
+        FamilyType(code='H', type='HouseHold', sort_order=5, alt_language='Famille'),
+        FamilyType(code='G', type='Group', sort_order=6, alt_language='Groupe'),
+    ])
+
+
+def create_test_basic_identification_types():
+        IdentificationType.objects.bulk_create([
+        IdentificationType(code='D', identification_type="Driver's Licence", alt_language=None, sort_order=1),
+        IdentificationType(code='V', identification_type="Voter's ID", alt_language=None, sort_order=2),
+        IdentificationType(code='N', identification_type="National ID", alt_language=None, sort_order=3),
+        IdentificationType(code='P', identification_type="Passport", alt_language=None, sort_order=4),
     ])
