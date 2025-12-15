@@ -38,9 +38,9 @@ def create_test_insuree(with_family=True, is_head=False, custom_props=None, fami
     village = None
     insuree = None
     if 'id' in custom_props:
-        insuree = Insuree.objects.filter(id=custom_props['id'], *filter_validity()).first()
+        insuree = Insuree.objects.filter(id=custom_props['id'], *Insuree.filter_validity()).first()
     if not insuree and 'uuid' in custom_props:
-        insuree = Insuree.objects.filter(uuid=custom_props['uuid'], *filter_validity()).first()
+        insuree = Insuree.objects.filter(uuid=custom_props['uuid'], *Insuree.filter_validity()).first()
     if not insuree:
         if 'chf_id' in custom_props:
             ref = custom_props.pop('chf_id')
@@ -93,7 +93,7 @@ def create_test_insuree(with_family=True, is_head=False, custom_props=None, fami
             }
         )
     if family is None:
-        family = Family.objects.filter(head_insuree=insuree, *filter_validity()).first()
+        family = Family.objects.filter(head_insuree=insuree, *Family.filter_validity()).first()
     if with_family and family is None and insuree.family is None:
         if not family_custom_props:
             family_custom_props = {}

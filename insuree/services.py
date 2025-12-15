@@ -335,7 +335,7 @@ class InsureeService:
         if "uuid" in data:
             insuree = Insuree.objects.filter(uuid=data["uuid"]).first()
         elif 'chf_id' in data and not create_only:
-            insuree = Insuree.objects.filter(chf_id=data["chf_id"], *filter_validity()).first()
+            insuree = Insuree.objects.filter(chf_id=data["chf_id"], *Insuree.filter_validity()).first()
         if status in [InsureeStatus.INACTIVE, InsureeStatus.DEAD]:
             status_reason = InsureeStatusReason.objects.get(code=data.get('status_reason', None),
                                                             validity_to__isnull=True)
@@ -535,7 +535,7 @@ class FamilyService:
             filters = Q(uuid=(family.uuid))
         else:
             filters = None
-        existing_family = Family.objects.filter(*filter_validity(), filters).first() if filters else None
+        existing_family = Family.objects.filter(*Family.filter_validity(), filters).first() if filters else None
         if existing_family:
             return self._update(existing_family, family)
         else:

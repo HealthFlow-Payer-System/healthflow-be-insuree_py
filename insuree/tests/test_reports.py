@@ -1,4 +1,4 @@
-from core.test_helpers import create_test_interactive_user
+from core.test_helpers import create_test_interactive_user, create_test_role
 from rest_framework import status
 from rest_framework.test import APITestCase
 from dataclasses import dataclass
@@ -7,8 +7,6 @@ from core.models import User
 from django.conf import settings
 from django.db import connection
 from core.models.openimis_graphql_test_case import BaseTestContext
-
-from unittest.mock import patch, PropertyMock
 
 
 
@@ -25,32 +23,78 @@ class ReportAPITests( APITestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.admin_user = create_test_interactive_user(username="testLocationAdmin")
+        cls.admin_user = create_test_interactive_user(username="testLocationAdmin", roles=[1])
         cls.admin_token = BaseTestContext(user=cls.admin_user).get_jwt()
         
     def test_single_enrolled_families_report(self):
-        headers={"HTTP_AUTHORIZATION": f"Bearer {self.admin_token}"}
+        report_role = create_test_role(perm_names=["gql_reports_families_insurees_overview_perms"], name="EnrolledFamiliesReportRole")
+        report_user = create_test_interactive_user(username="testEnrolledFamiliesUser", roles=[report_role.id])
+        report_token = BaseTestContext(user=report_user).get_jwt()
+        headers={"HTTP_AUTHORIZATION": f"Bearer {report_token}"}
         response = self.client.get(self.EFO_URL, format='json', **headers)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_single_enrolled_families_report_access_denied(self):
+        # Test that a user without proper permissions gets access denied
+        empty_role = create_test_role(perm_names=[], name="EmptyRole")
+        unauthorized_user = create_test_interactive_user(username="testUnauthorizedUser", roles=[empty_role.id])
+        unauthorized_token = BaseTestContext(user=unauthorized_user).get_jwt()
+        headers={"HTTP_AUTHORIZATION": f"Bearer {unauthorized_token}"}
+        response = self.client.get(self.EFO_URL, format='json', **headers)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_single_insuree_family_overview_report(self):
-        with patch('core.models.InteractiveUser.is_imis_admin', new_callable=PropertyMock) as mock_is_imis_admin:
-            mock_is_imis_admin.return_value = False
-            with self.settings(ROW_SECURITY=True):
-                headers={"HTTP_AUTHORIZATION": f"Bearer {self.admin_token}"}
-                response = self.client.get(self.IFO_URL, format='json', **headers)
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+        report_role = create_test_role(perm_names=["gql_reports_families_insurees_overview_perms"], name="InsureeFamilyOverviewReportRole")
+        report_user = create_test_interactive_user(username="testReportUser", roles=[report_role.id])
+        report_token = BaseTestContext(user=report_user).get_jwt()
+        with self.settings(ROW_SECURITY=True):
+            headers={"HTTP_AUTHORIZATION": f"Bearer {report_token}"}
+            response = self.client.get(self.IFO_URL, format='json', **headers)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_insuree_family_overview_report_access_denied(self):
+        # Test that a user without proper permissions gets access denied
+        empty_role = create_test_role(perm_names=[], name="EmptyRole")
+        unauthorized_user = create_test_interactive_user(username="testUnauthorizedUser", roles=[empty_role.id])
+        unauthorized_token = BaseTestContext(user=unauthorized_user).get_jwt()
+        headers={"HTTP_AUTHORIZATION": f"Bearer {unauthorized_token}"}
+        response = self.client.get(self.IFO_URL, format='json', **headers)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+    
     def test_single_insuree_missing_photo_report(self):
         if not connection.vendor == 'postgresql':
             self.skipTest("This test can only be executed for PSQL database")
-        headers={"HTTP_AUTHORIZATION": f"Bearer {self.admin_token}"}
+        report_role = create_test_role(perm_names=["gql_reports_families_insurees_overview_perms"], name="InsureeMissingPhotoReportRole")
+        report_user = create_test_interactive_user(username="testMissingPhotoUser", roles=[report_role.id])
+        report_token = BaseTestContext(user=report_user).get_jwt()
+        headers={"HTTP_AUTHORIZATION": f"Bearer {report_token}"}
         response = self.client.get(self.IMP_URL, format='json', **headers)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
+    def test_single_insuree_missing_photo_report_access_denied(self):
+        # Test that a user without proper permissions gets access denied
+        empty_role = create_test_role(perm_names=[], name="EmptyRole")
+        unauthorized_user = create_test_interactive_user(username="testUnauthorizedUser", roles=[empty_role.id])
+        unauthorized_token = BaseTestContext(user=unauthorized_user).get_jwt()
+        headers={"HTTP_AUTHORIZATION": f"Bearer {unauthorized_token}"}
+        response = self.client.get(self.IMP_URL, format='json', **headers)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_single_insurees_pending_enrollment_report(self):
         if not connection.vendor == 'postgresql':
             self.skipTest("This test can only be executed for PSQL database")
-        headers={"HTTP_AUTHORIZATION": f"Bearer {self.admin_token}"}
+        report_role = create_test_role(perm_names=["gql_reports_families_insurees_overview_perms"], name="InsureesPendingEnrollmentReportRole")
+        report_user = create_test_interactive_user(username="testPendingEnrollmentUser", roles=[report_role.id])
+        report_token = BaseTestContext(user=report_user).get_jwt()
+        headers={"HTTP_AUTHORIZATION": f"Bearer {report_token}"}
         response = self.client.get(self.IME_URL, format='json', **headers)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_single_insurees_pending_enrollment_report_access_denied(self):
+        # Test that a user without proper permissions gets access denied
+        empty_role = create_test_role(perm_names=[], name="EmptyRole")
+        unauthorized_user = create_test_interactive_user(username="testUnauthorizedUser", roles=[empty_role.id])
+        unauthorized_token = BaseTestContext(user=unauthorized_user).get_jwt()
+        headers={"HTTP_AUTHORIZATION": f"Bearer {unauthorized_token}"}
+        response = self.client.get(self.IME_URL, format='json', **headers)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

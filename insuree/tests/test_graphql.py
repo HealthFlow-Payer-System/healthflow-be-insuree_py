@@ -15,6 +15,7 @@ from core.test_helpers import (
     create_medical_officer_role,
     create_scheme_admin_role,
     create_receptionist_role,
+    create_enrolment_officer_role,
 )
 from django.conf import settings
 from graphene_django.utils.testing import GraphQLTestCase
@@ -63,7 +64,7 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
         cls.photo_base64 = "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAAA1BMVEW10NBjBBbqAAAAH0lEQVRoge3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAvg0hAAABmmDh1QAAAABJRU5ErkJggg=="
 
         cls.photo_base64_2 = "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAAA1BMVEW10NBjBBbrAAAAH0lEQVRoge3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAvg0hAAABmmDh1QAAAABJRU5ErkJggg=="
-        cls.eo_user = create_test_interactive_user(username="Positif")
+        cls.eo_user = create_test_interactive_user(username="Positif", roles=[create_enrolment_officer_role().id])
         cls.non_eo_user = create_test_interactive_user(username="NonEo", roles=[
             create_scheme_admin_role().id,
             create_manager_role().id,
@@ -73,7 +74,7 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
             create_receptionist_role().id,
         ])
         cls.eo_token = get_token(cls.eo_user, DummyContext(user=cls.eo_user))
-        cls.non_eo_token = get_token(cls.non_eo_user, DummyContext(user=cls.non_eo_user))
+        cls.non_eo_token = get_token(cls.non_eo_user, DummyContext(user=cls.eo_user))
         cls.test_officer = create_test_officer(villages = [cls.test_village], custom_props={'code':"Positif",'last_name':"Positif",'other_names':"Le"})
         cls.eo_user.officer = cls.test_officer
         cls.eo_user.save()
@@ -358,7 +359,7 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
     # This validates the status code and if you get errors
       self.assertResponseNoErrors(response)
       content=  self.get_mutation_result(muuid, self.admin_dist_token )
-      family = Family.objects.filter(*filter_validity(),uuid= uuid.UUID(fuuid)).first()
+      family = Family.objects.filter(*Family.filter_validity(),uuid= uuid.UUID(fuuid)).first()
       self.assertEqual(family.poverty, True)
 
       
