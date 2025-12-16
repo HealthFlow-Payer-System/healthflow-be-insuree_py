@@ -370,7 +370,7 @@ class InsureeService:
         for policy in policies_to_activate:
             if policy.expiry_date >= now:
                 current_policy_dict = {"effective_date": now, "expiry_date": policy.expiry_date,
-                                       "audit_user_id": self.user.audit_user_id, "offline": policy.offline,
+                                       "audit_user_id": self.user.id_for_audit, "offline": policy.offline,
                                        "start_date": policy.start_date, "policy": policy, "insuree": insuree,
                                        "enrollment_date": policy.enroll_date}
                 current_policy = InsureePolicy(**current_policy_dict)
