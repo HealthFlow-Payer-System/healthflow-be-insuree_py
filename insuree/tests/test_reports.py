@@ -1,4 +1,4 @@
-from core.test_helpers import create_test_interactive_user, create_test_role
+from core.test_helpers import create_test_interactive_user, create_test_role, create_admin_role
 from rest_framework import status
 from rest_framework.test import APITestCase
 from dataclasses import dataclass
@@ -23,7 +23,7 @@ class ReportAPITests( APITestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.admin_user = create_test_interactive_user(username="testLocationAdmin", roles=[1])
+        cls.admin_user = create_test_interactive_user(username="testLocationAdmin", roles=[create_admin_role().id])
         cls.admin_token = BaseTestContext(user=cls.admin_user).get_jwt()
         
     def test_single_enrolled_families_report(self):
