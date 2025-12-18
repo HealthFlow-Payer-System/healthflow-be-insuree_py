@@ -274,9 +274,11 @@ def create_test_family_type():
 
 
 def create_test_basic_identification_types():
-        IdentificationType.objects.bulk_create([
-        IdentificationType(code='D', identification_type="Driver's Licence", alt_language=None, sort_order=1),
-        IdentificationType(code='V', identification_type="Voter's ID", alt_language=None, sort_order=2),
-        IdentificationType(code='N', identification_type="National ID", alt_language=None, sort_order=3),
-        IdentificationType(code='P', identification_type="Passport", alt_language=None, sort_order=4),
+    if IdentificationType.objects.exists():
+        return
+    IdentificationType.objects.bulk_create([
+    IdentificationType(code='D', identification_type="Driver's Licence", alt_language=None, sort_order=1),
+    IdentificationType(code='V', identification_type="Voter's ID", alt_language=None, sort_order=2),
+    IdentificationType(code='N', identification_type="National ID", alt_language=None, sort_order=3),
+    IdentificationType(code='P', identification_type="Passport", alt_language=None, sort_order=4),
     ])
