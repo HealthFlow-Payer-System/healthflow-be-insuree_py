@@ -217,7 +217,7 @@ class Query(ExportableQueryMixin, graphene.ObjectType):
         family = Family.objects.get(Q(uuid=(kwargs.get('family_uuid'))))
         return Insuree.objects.filter(
             Q(family=family),
-            *filter_validity(**kwargs)
+            *Insuree.filter_validity(**kwargs)
         ).order_by('-head', 'dob')
 
     def resolve_educations(self, info, **kwargs):
@@ -467,27 +467,19 @@ def _get_contextual_insuree_officers(info, location_id=None, **kwargs):
             raise PermissionDenied(_("unauthorized"))
 
         user = info.context.user
-        i_user = getattr(user, '_u', None)
+        i_user = getattr(user, 'i_user', None)
         
-        if i_user:
-            user_roles = UserRole.objects.filter(user_id=i_user.id, validity_to__isnull=True)
-            roles = list(
-                Role.objects.filter(
-                    id__in=user_roles.values_list("role_id", flat=True),
-                    validity_to__isnull=True
-                ).values_list("name", flat=True)
-            )
-            # If the user is an Enrolment Officer (EO)
-            if "Enrolment Officer" in roles:
-                return Officer.objects.filter(id=user.officer.id, validity_to__isnull=True)
-            
+        if getattr(user, 'officer', None):
+            return Officer.objects.filter(id=user.officer.id, *Officer.filter_validity())
+        elif i_user:
+            # If the user is an Enrolment Officer (EO)          
             # Non-EO user
             if location_id:
-                officers = Officer.objects.filter(officer_villages__location__id=location_id, validity_to__isnull=True)
+                officers = Officer.objects.filter(officer_villages__location__id=location_id, *Officer.filter_validity())
 
                 if officers.exists():
                     return officers
 
         # No officers found → return all valid EOs
-        return Officer.objects.filter(validity_to__isnull=True)
+        return Officer.objects.filter(*Officer.filter_validity())
     
