@@ -94,7 +94,7 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
             headers={"HTTP_AUTHORIZATION": f"Bearer {self.admin_token}"},
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
 
         self.assertResponseNoErrors(response)
