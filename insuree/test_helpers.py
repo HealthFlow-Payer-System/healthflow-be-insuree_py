@@ -7,13 +7,14 @@ from location.test_helpers import create_test_village
 import random
 import re
 from datetime import datetime
-from core import filter_validity
-    
+
+
 def generate_random_insuree_number():
     start_number = pow(10, (InsureeConfig.insuree_number_max_length or 8) - 1)
     end_number = start_number * 10 - 1
     return random.randrange(start_number, end_number)
-    
+
+
 def create_test_insuree(with_family=True, is_head=False, custom_props=None, family_custom_props=None):
     create_test_gender()
     create_test_profession()
@@ -28,13 +29,11 @@ def create_test_insuree(with_family=True, is_head=False, custom_props=None, fami
         custom_props = {k: v for k, v in custom_props.items() if hasattr(Insuree, k)}
     if family_custom_props is None:
         family_custom_props = {}
-  
-        
+
     # insuree has a mandatory reference to family and family has a mandatory reference to insuree
     # So we first insert the family with a dummy id and then update it
-    #loof if it exists
+    # loof if it exists
     family = None
-    location = None
     village = None
     insuree = None
     if 'id' in custom_props:
@@ -50,14 +49,14 @@ def create_test_insuree(with_family=True, is_head=False, custom_props=None, fami
             ref = generate_random_insuree_number()
         insuree = Insuree.objects.filter(chf_id=ref, validity_to__isnull=True).first()
     if insuree is None:
-        #managing location
+        # managing location
         family_location = None
-        if  isinstance(family_custom_props, dict):
+        if isinstance(family_custom_props, dict):
             if "location" in family_custom_props:
                 family_location = family_custom_props['location']
             elif "location_id" in family_custom_props:
                 family_location = Location.objects.get(pk=family_custom_props['location_id'])
-                        
+
         qs_location = Location.objects.filter(type="V", validity_to__isnull=True)
 
         if custom_props and "current_village" in custom_props:
@@ -68,17 +67,14 @@ def create_test_insuree(with_family=True, is_head=False, custom_props=None, fami
             village = custom_props["family"].location
         elif family_location:
             village = family_location
-        else:   
+        else:
             village = create_test_village()
 
-    
-        family = get_from_custom_props(custom_props, 'family',  None)
-        
+        family = get_from_custom_props(custom_props, 'family', None)
 
-        
         insuree = Insuree.objects.create(
             **{
-                'last_name': get_from_custom_props(custom_props, 'last_name',"Test Last" ),
+                'last_name': get_from_custom_props(custom_props, 'last_name', "Test Last"),
                 'other_names': get_from_custom_props(custom_props, 'other_names', "First Second"),
                 'family': family,
                 'gender': get_from_custom_props(custom_props, 'gender', Gender.objects.get(code='M')),
@@ -86,8 +82,8 @@ def create_test_insuree(with_family=True, is_head=False, custom_props=None, fami
                 'chf_id': ref,
                 'head': is_head,
                 'card_issued': get_from_custom_props(custom_props, 'card_issued', True),
-                'validity_from': get_from_custom_props(custom_props, 'validity_from',"2019-01-01"),
-                'audit_user_id': get_from_custom_props(custom_props, 'audit_user_id',-1),
+                'validity_from': get_from_custom_props(custom_props, 'validity_from', "2019-01-01"),
+                'audit_user_id': get_from_custom_props(custom_props, 'audit_user_id', -1),
                 'current_village': village,
                 **custom_props
             }
@@ -103,15 +99,14 @@ def create_test_insuree(with_family=True, is_head=False, custom_props=None, fami
         family = create_test_family(custom_props=family_custom_props)
         insuree.family = family
         insuree.save()
-        
+
         # insuree2 =  create_test_insuree(
-        #     with_family=False, 
-        #     is_head=False, 
-        #     custom_props={'family': family}, 
+        #     with_family=False,
+        #     is_head=False,
+        #     custom_props={'family': family},
         #     family_custom_props=None
         # )
 
-    
     family_custom_props = {}
 
     return insuree
@@ -126,8 +121,8 @@ def create_test_family(custom_props=None):
     location = None
     if custom_props and "id" in custom_props:
         family = Family.objects.filter(id=custom_props['id']).first()
-    if family is None and custom_props and "uuid" in custom_props:    
-        family = Family.objects.filter(uuid=custom_props['uuid']).first()      
+    if family is None and custom_props and "uuid" in custom_props:
+        family = Family.objects.filter(uuid=custom_props['uuid']).first()
     if family is None:
         qs_location = Location.objects.filter(type="V")
         if custom_props and "location" in custom_props:
@@ -135,15 +130,14 @@ def create_test_family(custom_props=None):
         elif custom_props and "location_id" in custom_props:
             location = qs_location.filter(location_id=custom_props.pop('location_id')).first()
         else:
-            location = qs_location.filter(validity_to__isnull=True).first() 
-            ## manage head
-        head_insuree = custom_props.pop('head_insuree', Insuree.objects.filter(validity_to__isnull=True).first())    
-            
+            location = qs_location.filter(validity_to__isnull=True).first()
+            # manage head
+        head_insuree = custom_props.pop('head_insuree', Insuree.objects.filter(validity_to__isnull=True).first())
 
         family = Family.objects.create(
             **{
                 'validity_from': get_from_custom_props(custom_props, 'validity_from', "2019-01-01"),
-                'audit_user_id': get_from_custom_props(custom_props, 'audit_user_id',-1),
+                'audit_user_id': get_from_custom_props(custom_props, 'audit_user_id', -1),
                 'head_insuree': head_insuree,
                 'location': location,
                 **custom_props
@@ -151,7 +145,6 @@ def create_test_family(custom_props=None):
         )
 
     return family
-
 
 
 base64_blank_jpg = """
@@ -164,9 +157,11 @@ xMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAEC
 l6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+
 iiigD//2Q==
 """
-def get_from_custom_props( custom_props, elm, default):
 
-    value= custom_props.pop(elm) if custom_props and elm in custom_props else default
+
+def get_from_custom_props(custom_props, elm, default):
+
+    value = custom_props.pop(elm) if custom_props and elm in custom_props else default
 
     regex = re.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
     regex_dt = re.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$")
@@ -175,7 +170,7 @@ def get_from_custom_props( custom_props, elm, default):
     elif isinstance(value, str) and regex_dt.match(value):
         value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
     return value
-    
+
 
 def create_test_photo(insuree_id, officer_id, custom_props=None):
     if custom_props is None:
@@ -277,8 +272,8 @@ def create_test_basic_identification_types():
     if IdentificationType.objects.exists():
         return
     IdentificationType.objects.bulk_create([
-    IdentificationType(code='D', identification_type="Driver's Licence", alt_language=None, sort_order=1),
-    IdentificationType(code='V', identification_type="Voter's ID", alt_language=None, sort_order=2),
-    IdentificationType(code='N', identification_type="National ID", alt_language=None, sort_order=3),
-    IdentificationType(code='P', identification_type="Passport", alt_language=None, sort_order=4),
+        IdentificationType(code='D', identification_type="Driver's Licence", alt_language=None, sort_order=1),
+        IdentificationType(code='V', identification_type="Voter's ID", alt_language=None, sort_order=2),
+        IdentificationType(code='N', identification_type="National ID", alt_language=None, sort_order=3),
+        IdentificationType(code='P', identification_type="Passport", alt_language=None, sort_order=4),
     ])

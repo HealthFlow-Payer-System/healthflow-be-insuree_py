@@ -86,7 +86,6 @@ class InsureeConfig(AppConfig):
             if hasattr(InsureeConfig, field):
                 setattr(InsureeConfig, field, cfg[field])
 
-
     def ready(self):
         from core.models import ModuleConfiguration
         cfg = ModuleConfiguration.get_or_default(MODULE_NAME, DEFAULT_CFG)

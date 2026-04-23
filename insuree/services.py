@@ -17,7 +17,6 @@ from insuree.apps import InsureeConfig
 from insuree.models import (InsureePhoto, PolicyRenewalDetail, Insuree, Family, InsureePolicy, InsureeStatus,
                             InsureeStatusReason)
 from django.core.exceptions import ValidationError
-from core.models import filter_validity, resolved_id_reference
 
 
 logger = logging.getLogger(__name__)
@@ -92,17 +91,17 @@ def validate_insuree_number(insuree_number, insuree_uuid=None):
                 }
             ]
     if InsureeConfig.insuree_number_min_length and len(insuree_number) < InsureeConfig.insuree_number_min_length:
-            return [
-                {
-                    "errorCode": InsureeConfig.validation_code_invalid_insuree_number_len,
-                    "message": _("Invalid insuree number length %s, should be minimum %s") %
-                    (
-                        len(insuree_number),
-                        InsureeConfig.insuree_number_min_length
-                    )
-                }
-            ]
-        
+        return [
+            {
+                "errorCode": InsureeConfig.validation_code_invalid_insuree_number_len,
+                "message": _("Invalid insuree number length %s, should be minimum %s") %
+                (
+                    len(insuree_number),
+                    InsureeConfig.insuree_number_min_length
+                )
+            }
+        ]
+
     config_modulo = InsureeConfig.insuree_number_modulo_root
     if config_modulo:
         try:
@@ -127,7 +126,6 @@ def validate_insuree_number(insuree_number, insuree_uuid=None):
             "message": "Insuree number has to be unique, %s exists in system" % insuree_number
         }]
 
-    
     return []
 
 
@@ -185,22 +183,22 @@ def reset_family_before_update(family):
     family.json_ext = None
 
 
-
 def _resize_image(base64_str, max_size=(1024, 1024)):
     image_data = base64.b64decode(base64_str)
-    
+
     image = Image.open(BytesIO(image_data))
-    
+
     if image.size[0] > max_size[0] or image.size[1] > max_size[1]:
         image.thumbnail(max_size)  # Maintain aspect ratio
-    
+
     buffer = BytesIO()
     image.save(buffer, format=image.format)
-    
+
     resized_base64_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
-    
+
     return resized_base64_str
-    
+
+
 def handle_insuree_photo(user, now, insuree, data):
     existing_insuree_photo = insuree.photo
     insuree_photo = None
@@ -210,25 +208,24 @@ def handle_insuree_photo(user, now, insuree, data):
     data['validity_from'] = now
     data['insuree_id'] = insuree.id
     photo_bin = data.get('photo', None)
-    photo_bin = _resize_image(photo_bin) if photo_bin else None 
+    photo_bin = _resize_image(photo_bin) if photo_bin else None
     # no photo changes
     if (
-        'uuid' in data and existing_insuree_photo and
-        uuid.UUID(data['uuid']) == uuid.UUID(existing_insuree_photo.uuid)
+        'uuid' in data and existing_insuree_photo
+        and uuid.UUID(data['uuid']) == uuid.UUID(existing_insuree_photo.uuid)
     ):
         existing_insuree_photo_bin = load_photo_file(
             existing_insuree_photo.folder,
             existing_insuree_photo.filename
         )
-        if photo_bin == existing_insuree_photo_bin: 
+        if photo_bin == existing_insuree_photo_bin:
             return existing_insuree_photo
         else:
             # we ignore the uuid, FE must have messup
             data['uuid'] = str(uuid.uuid4())
     if 'uuid' not in data:
         data['uuid'] = str(uuid.uuid4())
-    
-    
+
     if photo_bin and InsureeConfig.insuree_photos_root_path \
             and (existing_insuree_photo is None or existing_insuree_photo.photo != photo_bin):
         (file_dir, file_name) = create_file(now, insuree.id, photo_bin, data['uuid'])
@@ -308,7 +305,6 @@ def validate_insuree_data(insuree):
         raise ValidationError(_("insuree.validation.insuree_requires_status"))
 
 
-
 def validate_worker_data(insuree):
     if not insuree.other_names:
         raise ValidationError(_("worker_requires_other_names"))
@@ -349,7 +345,7 @@ class InsureeService:
         status = data.get('status', InsureeStatus.ACTIVE)
         if status not in [choice[0] for choice in InsureeStatus.choices]:
             raise ValidationError(_("mutation.insuree.wrong_status"))
-        # If photo is set it cannot be deleted 
+        # If photo is set it cannot be deleted
         if InsureeConfig.is_insuree_photo_required and photo_data is None and 'uuid' not in data:
             raise ValidationError(_("mutation.insuree.no_required_photo"))
         insuree = None
@@ -397,7 +393,6 @@ class InsureeService:
                 current_policy = InsureePolicy(**current_policy_dict)
                 current_policy.save()
 
-
     def _create_or_update(self, insuree, photo_data=None, add_on_existing_policy=False):
         validate_insuree(insuree)
         if insuree.id:
@@ -430,7 +425,7 @@ class InsureeService:
             insuree.family = None
             insuree.save()
             return []
-        except Exception as exc:
+        except Exception:
             logger.exception("insuree.mutation.failed_to_remove_insuree")
             return {
                 'title': insuree.chf_id,
@@ -438,12 +433,12 @@ class InsureeService:
                     'message': _("insuree.mutation.failed_to_remove_insuree") % {'chfid': insuree.chfid},
                     'detail': insuree.uuid}]
             }
-            
+
     def change_family(self, insuree, family, user_audit_id=None):
         if insuree.family != family:
             if (
-                insuree.family and
-                insuree.family.head_insuree == insuree
+                insuree.family
+                and insuree.family.head_insuree == insuree
             ):
                 raise ValueError(F"Insuree {insuree} already assigned as head to a family")
             if user_audit_id:
@@ -454,8 +449,7 @@ class InsureeService:
                 insuree.save()
             return True
         return False
-        
-        
+
     @register_service_signal('insuree_service.delete')
     def set_deleted(self, insuree):
         try:
@@ -463,7 +457,7 @@ class InsureeService:
             [ip.delete_history()
              for ip in insuree.insuree_policies.filter(validity_to__isnull=True)]
             return []
-        except Exception as exc:
+        except Exception:
             logger.exception("insuree.mutation.failed_to_delete_insuree")
             return {
                 'title': insuree.chf_id,
@@ -482,7 +476,7 @@ class InsureeService:
                 ip.expiry_date = now
             InsureePolicy.objects.bulk_update(ips, ['expiry_date'])
             return []
-        except Exception as exc:
+        except Exception:
             logger.exception(
                 "insuree.mutation.failed_to_cancel_insuree_policies")
             return {
@@ -529,15 +523,15 @@ class FamilyService:
 
     def create_or_update(self, data):
         head_insuree_data = data.pop('head_insuree', None)
-        
+
         if head_insuree_data:
             head_insuree_data["head"] = True
             head_insuree = InsureeService(
                 self.user).create_or_update(head_insuree_data)
             data["head_insuree_id"] = head_insuree.id
-        
+
         elif 'head_insuree_id' not in data:
-            raise Exception(f'no head insuree found')
+            raise Exception('no head insuree found')
         from core import datetime
 
         now = datetime.datetime.now()
@@ -583,7 +577,7 @@ class FamilyService:
              for member in family.members.filter(validity_to__isnull=True).all()]
             family.delete_history()
             return []
-        except Exception as exc:
+        except Exception:
             logger.exception("insuree.mutation.failed_to_delete_family")
             return {
                 'title': family.uuid,
