@@ -307,7 +307,7 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
     mutation {{
       updateFamily(
         input: {{
-          clientMutationId: "{muuid}"
+          clientMutationId: "{mmuid}"
           clientMutationLabel: "Update Family - test create family (445566778899)"
           headInsuree: {{
     chfId: "{hear_number}"
@@ -344,7 +344,7 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
 
     # This validates the status code and if you get errors
         self.assertResponseNoErrors(response)
-        self.get_mutation_result(muuid, self.admin_dist_token)
+        self.get_mutation_result(mmuid, self.admin_dist_token)
         family = Family.objects.filter(*Family.filter_validity(), uuid=uuid.UUID(fuuid)).first()
         self.assertEqual(family.poverty, True)
 
