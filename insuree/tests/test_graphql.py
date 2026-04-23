@@ -303,6 +303,7 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
         self.assertResponseNoErrors(response)
         self.get_mutation_result(muuid, self.admin_dist_token)
         # update
+        mmuid = '50f8f2c9-7685-4cd5-a778-b1fa78d46471'
         response = self.query(f'''
     mutation {{
       updateFamily(
