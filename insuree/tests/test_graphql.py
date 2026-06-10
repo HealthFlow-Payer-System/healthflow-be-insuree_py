@@ -271,8 +271,8 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
     def test_create_family(self):
       hear_number = generate_random_insuree_number()
 
-      muuid='50f8f2c9-7685-4cd5-a7d8-b1fa78d46470'
-      fuuid='50f8f2c9-7685-4cd5-a770-b1fa34d46470'
+      muuid= str(uuid.uuid4())
+      fuuid= str(uuid.uuid4())
       response = self.query(f'''
     mutation {{
       createFamily(
@@ -315,8 +315,9 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
     # This validates the status code and if you get errors
       self.assertResponseNoErrors(response)
       self.get_mutation_result(muuid, self.admin_dist_token )
-      mmuid = '50f8f2c9-7685-4cd5-a778-b1fa78d46471'
+      mmuid = str(uuid.uuid4())
       # update
+      muuid= str(uuid.uuid4())
       response = self.query(f'''
     mutation {{
       updateFamily(
