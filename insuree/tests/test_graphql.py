@@ -17,6 +17,16 @@ from core.test_helpers import (
     create_receptionist_role,
     create_enrolment_officer_role,
 )
+from insuree.test_helpers import (
+    create_test_insuree,
+    create_test_family,
+    create_test_gender,
+    create_test_profession,
+    create_test_education,
+    create_test_relation,
+    create_test_confirmation_type,
+    create_test_family_type
+)
 from django.conf import settings
 from graphene_django.utils.testing import GraphQLTestCase
 from graphql_jwt.shortcuts import get_token
@@ -51,6 +61,13 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        create_basic_test_locations()
+        create_test_gender()
+        create_test_family_type()
+        create_test_profession()
+        create_test_education()
+        create_test_relation()
+        create_test_confirmation_type()
         cls.test_village = create_test_village()
         cls.test_insuree = create_test_insuree(with_family=True, is_head=True, custom_props={'current_village':cls.test_village}, family_custom_props={'location':cls.test_village})
         cls.admin_user = create_test_interactive_user(username="testLocationAdmin")
@@ -63,7 +80,7 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
         cls.admin_dist_token = BaseTestContext(user=cls.admin_dist_user).get_jwt()
         cls.photo_base64 = "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAAA1BMVEW10NBjBBbqAAAAH0lEQVRoge3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAvg0hAAABmmDh1QAAAABJRU5ErkJggg=="
 
-        cls.photo_base64_2 = "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAAA1BMVEW10NBjBBbrAAAAH0lEQVRoge3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAvg0hAAABmmDh1QAAAABJRU5ErkJggg=="
+        cls.photo_base64_2 = "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABMElEQVR4nO3RMQ0AIADAMEASmhCLLGT0YFWwZPOePeIsHfC7BmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYA7AFCcgJe0cBN0wAAAABJRU5ErkJggg=="
         cls.eo_user = create_test_interactive_user(username="Positif", roles=[create_enrolment_officer_role().id])
         cls.non_eo_user = create_test_interactive_user(username="NonEo", roles=[
             create_scheme_admin_role().id,
