@@ -29,7 +29,8 @@ class GenderAdmin(admin.ModelAdmin):
 
 @admin.register(IdentificationType)
 class IdentificationTypeAdmin(admin.ModelAdmin):
-    list_display = ["code", "identification_type", "sort_order", "alt_language"]
+    list_display = ["code", "identification_type",
+                    "sort_order", "alt_language"]
     list_display_links = ["code", "identification_type"]
     list_editable = ["sort_order"]
     search_fields = ["code", "identification_type", "alt_language"]
