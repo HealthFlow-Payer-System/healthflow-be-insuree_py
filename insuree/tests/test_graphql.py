@@ -238,35 +238,33 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
     def test_create_insuree(self):
         muuid = 'ffa465c5-6807-4de0-847e-202b7f42122b'
         response = self.query(f'''
-    mutation {{
-      createInsuree(
-        input: {{
-          clientMutationId: "{muuid}"
-          clientMutationLabel: "Create insuree "
-
-          chfId: "{generate_random_insuree_number()}"
-    lastName: "test"
-    otherNames: "create insuree"
-    genderId: "M"
-    dob: "1951-12-05"
-    head: false
-    marital: "M"
-    currentVillageId: {self.test_village.id}
-    photo:{{
-    officerId: 1
-    date: "2023-12-15"
-    photo: "{self.photo_base64}"
-  }}
-    cardIssued:false
-    status: "AC"
-        }}
-      ) {{
-        clientMutationId
-        internalId
-      }}
-    }}
-    ''',
-            headers={"HTTP_AUTHORIZATION": f"Bearer {self.admin_dist_token}"},
+          mutation {{
+            createInsuree(
+              input: {{
+                clientMutationId: "{muuid}"
+                clientMutationLabel: "Create insuree "
+                chfId: "{generate_random_insuree_number()}"
+                lastName: "test"
+                otherNames: "create insuree"
+                genderId: "M"
+                dob: "1951-12-05"
+                head: false
+                marital: "M"
+                currentVillageId: {self.test_village.id}
+                photo:{{
+                  officerId: 1
+                  date: "2023-12-15"
+                  photo: "{self.photo_base64}"
+                }}
+                cardIssued:false
+                status: "AC"
+              }}
+            ) {{
+              clientMutationId
+              internalId
+            }}
+          }}
+          ''', headers={"HTTP_AUTHORIZATION": f"Bearer {self.admin_dist_token}"},
         )
 
         # This validates the status code and if you get errors
@@ -275,44 +273,40 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
 
     def test_create_family(self):
         hear_number = generate_random_insuree_number()
-
         muuid = str(uuid.uuid4())
         fuuid = str(uuid.uuid4())
         response = self.query(f'''
-    mutation {{
-      createFamily(
-        input: {{
-          clientMutationId: "{muuid}"
-          clientMutationLabel: "Create Family - test create family (445566778899)"
-          headInsuree: {{
-    chfId: "{hear_number}"
-    lastName: "test"
-    otherNames: "create family"
-    genderId: "M"
-    uuid: "50f8f2c9-7685-4cd5-a778-b1fa78d46470"
-    dob: "1999-12-15"
-    head: true
-    photo:{{
-    officerId: 1
-    date: "2023-12-15"
-    photo: "{self.photo_base64}"
-
-  }}
-    cardIssued:false
-    status: "AC"
-  }}
-    locationId: {self.test_village.id}
-    poverty: false
-    uuid: "{fuuid}"
-    jsonExt: "{{}}"
-        }}
-      ) {{
-        clientMutationId
-        internalId
-      }}
-    }}
-      ''',
-            headers={"HTTP_AUTHORIZATION": f"Bearer {self.admin_dist_token}"},
+          mutation {{
+            createFamily(
+              input: {{
+                clientMutationId: "{muuid}"
+                clientMutationLabel: "Create Family - test create family (445566778899)"
+                headInsuree: {{
+                  chfId: "{hear_number}"
+                  lastName: "test"
+                  otherNames: "create family"
+                  genderId: "M"
+                  uuid: "50f8f2c9-7685-4cd5-a778-b1fa78d46470"
+                  dob: "1999-12-15"
+                  head: true
+                  photo:{{
+                    officerId: 1
+                    date: "2023-12-15"
+                    photo: "{self.photo_base64}"
+                  }}
+                  cardIssued:false
+                  status: "AC"
+                }}
+                locationId: {self.test_village.id}
+                poverty: false
+                uuid: "{fuuid}"
+                jsonExt: "{{}}"
+              }}
+            ) {{
+              clientMutationId
+              internalId
+            }}
+          }}''', headers={"HTTP_AUTHORIZATION": f"Bearer {self.admin_dist_token}"},
         )
 
         # This validates the status code and if you get errors
@@ -321,40 +315,37 @@ class InsureeGQLTestCase(openIMISGraphQLTestCase):
         # update
         muuid = str(uuid.uuid4())
         response = self.query(f'''
-    mutation {{
-      updateFamily(
-        input: {{
-          clientMutationId: "{muuid}"
-          clientMutationLabel: "Update Family - test create family (445566778899)"
-          headInsuree: {{
-    chfId: "{hear_number}"
-    uuid: "50f8f2c9-7685-4cd5-a778-b1fa78d46470"
-    lastName: "test"
-    otherNames: "create family"
-    genderId: "M"
-    dob: "1999-12-15"
-    head: true
-    photo:{{
-    officerId: 1
-    date: "2023-12-15"
-    photo: "{self.photo_base64_2}"
-
-  }}
-    cardIssued:false
-    status: "AC"
-  }}
-    locationId: {self.test_village.id}
-    poverty: true
-    uuid: "{fuuid}"
-    jsonExt: "{{}}"
-        }}
-      ) {{
-        clientMutationId
-        internalId
-      }}
-    }}
-      ''',
-            headers={"HTTP_AUTHORIZATION": f"Bearer {self.admin_dist_token}"},
+          mutation {{
+            updateFamily(
+              input: {{
+                clientMutationId: "{muuid}"
+                clientMutationLabel: "Update Family - test create family (445566778899)"
+                headInsuree: {{
+                  chfId: "{hear_number}"
+                  uuid: "50f8f2c9-7685-4cd5-a778-b1fa78d46470"
+                  lastName: "test"
+                  otherNames: "create family"
+                  genderId: "M"
+                  dob: "1999-12-15"
+                  head: true
+                  photo:{{
+                    officerId: 1
+                    date: "2023-12-15"
+                    photo: "{self.photo_base64_2}"
+                  }}
+                  cardIssued:false
+                  status: "AC"
+                }}
+                locationId: {self.test_village.id}
+                poverty: true
+                uuid: "{fuuid}"
+                jsonExt: "{{}}"
+              }}
+            ) {{
+                clientMutationId
+                internalId
+              }}
+            }}''', headers={"HTTP_AUTHORIZATION": f"Bearer {self.admin_dist_token}"},
         )
 
         # This validates the status code and if you get errors
