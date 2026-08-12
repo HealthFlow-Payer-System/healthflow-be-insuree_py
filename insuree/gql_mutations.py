@@ -1,10 +1,8 @@
 import logging
-from uuid import uuid4, UUID
-import pathlib
-import base64
+from uuid import UUID
 import graphene
 from insuree.apps import InsureeConfig
-from insuree.services import validate_insuree_number, InsureeService, FamilyService, InsureePolicyService
+from insuree.services import InsureeService, FamilyService, InsureePolicyService
 
 from core.schema import OpenIMISMutation
 from django.contrib.auth.models import AnonymousUser
@@ -100,7 +98,6 @@ class CreateFamilyInputType(FamilyInputType):
 
 class UpdateFamilyInputType(FamilyInputType):
     pass
-
 
 
 def update_or_create_insuree(data, user):
